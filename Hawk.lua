@@ -1,6 +1,5 @@
---==[ SPACE UI LIBRARY ]==--
--- Yer: StarterPlayer > StarterPlayerScripts
--- Kullanım: local SpaceUI = require(this_script)
+-- SpaceUI Library v1.0 | by nortex585
+-- GitHub: https://github.com/nortex585/Space-UI
 
 local SpaceUI = {}
 SpaceUI.__index = SpaceUI
@@ -11,24 +10,23 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local pg = player:WaitForChild("PlayerGui")
 
---==[ ANA PENCERE OLUŞTUR ]==--
 function SpaceUI.new(config)
 	local self = setmetatable({}, SpaceUI)
-
 	config = config or {}
+
 	self.Title = config.Title or "Space Hub"
 	self.Size = config.Size or UDim2.fromOffset(520, 330)
 	self.Position = config.Position or UDim2.fromScale(0.5, 0.5)
 	self.Icon = config.Icon or "rbxassetid://88106479644374"
 
-	-- Ana GUI
+	-- ScreenGui
 	self.ScreenGui = Instance.new("ScreenGui")
 	self.ScreenGui.Name = "SpaceUI"
 	self.ScreenGui.IgnoreGuiInset = true
 	self.ScreenGui.ResetOnSpawn = false
 	self.ScreenGui.Parent = pg
 
-	-- Ana Pencere
+	-- Window
 	self.Window = Instance.new("Frame")
 	self.Window.Size = self.Size
 	self.Window.Position = self.Position
@@ -54,7 +52,7 @@ function SpaceUI.new(config)
 	self.Logo.BackgroundTransparency = 1
 	self.Logo.Image = self.Icon
 
-	-- Başlık
+	-- Title
 	self.TitleLabel = Instance.new("TextLabel", self.Topbar)
 	self.TitleLabel.Text = self.Title
 	self.TitleLabel.Font = Enum.Font.GothamBold
@@ -65,16 +63,16 @@ function SpaceUI.new(config)
 	self.TitleLabel.Size = UDim2.new(1, -52, 1, 0)
 	self.TitleLabel.BackgroundTransparency = 1
 
-	-- Sağ üst butonlar
+	-- Buttons
 	self.BtnContainer = Instance.new("Frame", self.Topbar)
 	self.BtnContainer.BackgroundTransparency = 1
 	self.BtnContainer.Size = UDim2.fromOffset(80, 34)
 	self.BtnContainer.Position = UDim2.new(1, -84, 0, 0)
 
 	self.MinimizeBtn = self:_makeTopButton("–", UDim2.fromOffset(4, 5))
-	self.CloseBtn = self:_makeTopButton("×", UDim2.fromOffset(44, 5))
+	self.CloseBtn = self:_makeTopButton("x", UDim2.fromOffset(44, 5))
 
-	-- Gövde
+	-- Body
 	self.Body = Instance.new("Frame", self.Window)
 	self.Body.Size = UDim2.new(1, 0, 1, -34)
 	self.Body.Position = UDim2.fromOffset(0, 34)
@@ -97,22 +95,15 @@ function SpaceUI.new(config)
 	self.Content.BackgroundColor3 = Color3.fromRGB(32, 32, 36)
 	Instance.new("UICorner", self.Content).CornerRadius = UDim.new(0, 10)
 
-	-- Sayfa yönetimi
 	self.Pages = {}
 	self.CurrentPage = nil
 
-	-- Sürükleme
 	self:_enableDrag()
-
-	-- Minimize
-	self.Minimized = false
-	self.RestoreBtn = nil
 	self:_setupMinimize()
 
 	return self
 end
 
---==[ YARDIMCI FONKSİYONLAR ]==--
 function SpaceUI:_makeTopButton(text, pos)
 	local btn = Instance.new("TextButton", self.BtnContainer)
 	btn.Size = UDim2.fromOffset(36, 24)
@@ -141,10 +132,7 @@ function SpaceUI:_enableDrag()
 	UserInputService.InputChanged:Connect(function(input)
 		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 			local delta = input.Position - dragStart
-			self.Window.Position = UDim2.new(
-				startPos.X.Scale, startPos.X.Offset + delta.X,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y
-			)
+			self.Window.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
 	end)
 
@@ -157,7 +145,7 @@ end
 
 function SpaceUI:_setupMinimize()
 	self.MinimizeBtn.MouseButton1Click:Connect(function()
-		self.Minimized = not self.Minimized
+		self.Minimized = not (self.Minimized or false)
 		self.Body.Visible = not self.Minimized
 		self.Window.BackgroundTransparency = self.Minimized and 1 or 0
 		self.Stroke.Thickness = self.Minimized and 0 or 1.5
@@ -193,7 +181,6 @@ function SpaceUI:_setupMinimize()
 	end)
 end
 
---==[ SAYFA YÖNETİMİ ]==--
 function SpaceUI:AddPage(name)
 	local page = Instance.new("Frame", self.Content)
 	page.Name = name
@@ -202,7 +189,6 @@ function SpaceUI:AddPage(name)
 	page.Visible = false
 	self.Pages[name] = page
 
-	-- Menü butonu
 	local btn = Instance.new("TextButton", self.Sidebar)
 	btn.Size = UDim2.new(1, -20, 0, 30)
 	btn.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
@@ -229,7 +215,6 @@ function SpaceUI:SwitchPage(name)
 	end
 end
 
---==[ BİLEŞENLER ]==--
 function SpaceUI:CreateButton(parent, text, callback)
 	local row = Instance.new("TextButton", parent)
 	row.Size = UDim2.new(1, -20, 0, 40)
@@ -252,10 +237,9 @@ function SpaceUI:CreateButton(parent, text, callback)
 	dot.Position = UDim2.new(1, -22, 0.5, -6)
 	dot.BackgroundColor3 = Color3.fromRGB(54, 54, 62)
 	Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-	self.Dot = dot
 
 	row.MouseButton1Click:Connect(function()
-		callback()
+		if callback then callback() end
 		TweenService:Create(dot, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(90, 180, 120)}):Play()
 		task.delay(0.25, function()
 			TweenService:Create(dot, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(54, 54, 62)}):Play()
